@@ -1,0 +1,16 @@
+{
+    "name": "basic-example",
+    "config": {
+        "connector.class": "com.sfconnector.bulkapisource.connector.BulkApiSourceConnector",
+        "kafka.topic": "Kafka-topic-1",
+        "second.required.param": "Connect",
+        "salesforce.instance": "",
+        "salesforce.username" : "",
+        "salesforce.password" : "",
+        "salesforce.key" : "",
+        "salesforce.secret" : "",
+        "salesforce.object":"",
+
+        "tasks.max": "1"
+    }
+}
