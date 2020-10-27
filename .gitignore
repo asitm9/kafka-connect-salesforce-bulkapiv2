@@ -101,4 +101,3 @@ nb-configuration.xml
 # Only include the example configurations
 config/connector.json
 config/log4j.properties
-config/basic-example.json

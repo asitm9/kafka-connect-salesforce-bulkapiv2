@@ -3,9 +3,9 @@
     
     "config": {
         "connector.class": "com.sfconnector.bulkapisource.connector.BulkApiSourceConnector",
-        "kafka.topic": "Kafka-topic-1",
+        "kafka.topic": "Kafka-topic-6",
         "salesforce.instance": "",
-        "salesforce.username" : "asit",
+        "salesforce.username" : "asit.mahato@cunning-wolf-vhtppc.com",
         "salesforce.password" : "123456",
         "salesforce.key" : "",
         "salesforce.secret" : "",

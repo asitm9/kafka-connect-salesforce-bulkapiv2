@@ -52,7 +52,7 @@ public class BulkApiSourceTask extends SourceTask {
 
         setupTaskConfig(properties);
 
-        log.debug("Trying to get persistedMap.");
+        log.info("Trying to get persistedMap.");
         Map<String, Object> persistedMap = null;
 
     }
