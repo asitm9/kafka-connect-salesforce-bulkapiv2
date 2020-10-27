@@ -1,16 +1,17 @@
 {
     "name": "basic-example",
+    
     "config": {
         "connector.class": "com.sfconnector.bulkapisource.connector.BulkApiSourceConnector",
         "kafka.topic": "Kafka-topic-1",
-        "second.required.param": "Connect",
         "salesforce.instance": "",
-        "salesforce.username" : "",
-        "salesforce.password" : "",
+        "salesforce.username" : "asit",
+        "salesforce.password" : "123456",
         "salesforce.key" : "",
         "salesforce.secret" : "",
         "salesforce.object":"",
-
+        "salesforce.query" : "",
+        "level": "DEBUG",
         "tasks.max": "1"
     }
 }

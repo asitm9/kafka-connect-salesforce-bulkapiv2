@@ -91,6 +91,8 @@ public class BulkApiSourceTask extends SourceTask {
             client = new Bulk2ClientBuilder().
                 withPassword(sfdc_key, sfdc_secret, username, password)
                 .build();
+            
+                log.info("Succesfully logged in....");
         } catch(Exception e){
             log.error("Exception occured during connection.");
         }
