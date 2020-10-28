@@ -1,6 +1,7 @@
 package com.sfconnector.bulkapisource.connector;
 
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,10 +48,17 @@ public class BulkApiSourceTask extends SourceTask {
     public void start(Map<String, String> properties) {
         config = new BulkApiSourceConnectorConfig(properties);
         monitorThreadTimeout = config.getInt(MONITOR_THREAD_TIMEOUT_CONFIG);
+        
         String sourcesStr = properties.get("sources");
         sources = Arrays.asList(sourcesStr.split(","));
 
+        try{
         setupTaskConfig(properties);
+        }catch(Exception e){
+            log.error("Exception occured during connection.");
+            log.info(e.getMessage());
+            log.info(e.getStackTrace().toString());
+        }
 
         log.info("Trying to get persistedMap.");
         Map<String, Object> persistedMap = null;
@@ -78,23 +86,24 @@ public class BulkApiSourceTask extends SourceTask {
 
 
 
-    private void setupTaskConfig(Map<String, String> props) {
-        baseUrl = props.get("SFDC_URL_CONFIG");
-        username = props.get("USERNAME_CONFIG");
-        password = props.get("PASSWORD_CONFIG");
-        sfdc_key = props.get("SFDC_KEY_CONFIG");
-        sfdc_secret = props.get("SFDC_SECRET_CONFIG");
-        sfdc_object = props.get("SFDC_OBJECT_CONFIG");
-        sfdc_query = props.get("SFDC_QUERY_CONFIG");
-        topic = props.get("TOPIC_CONFIG");
-        try{
-            client = new Bulk2ClientBuilder().
+    private void setupTaskConfig(Map<String, String> props) throws IOException{
+        config = new BulkApiSourceConnectorConfig(props);
+        //baseUrl = config.getString("SFDC_URL_CONFIG");
+        username = config.getString(USERNAME_CONFIG);
+        password = config.getString(PASSWORD_CONFIG);
+        sfdc_key = config.getString(SFDC_KEY_CONFIG);
+        sfdc_secret = config.getString(SFDC_SECRET_CONFIG);
+        sfdc_object = config.getString(SFDC_OBJECT_CONFIG);
+        sfdc_query = config.getString(SFDC_QUERY_CONFIG);
+        topic = config.getString(TOPIC_CONFIG);
+
+        log.info("-------> setupTaskConfig config sfdc_key- '" + sfdc_key + "'");
+        
+        client = new Bulk2ClientBuilder().
                 withPassword(sfdc_key, sfdc_secret, username, password)
                 .build();
             
-                log.info("Succesfully logged in....");
-        } catch(Exception e){
-            log.error("Exception occured during connection.");
-        }
+        log.info("Succesfully logged in....");
+        
     }
 }

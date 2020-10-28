@@ -1,6 +1,6 @@
 package com.sfconnector.bulkapisource.connector;
 
-
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.kafka.common.config.AbstractConfig;
@@ -96,6 +96,14 @@ public class BulkApiSourceConnectorConfig extends AbstractConfig {
             MONITOR_THREAD_TIMEOUT_DEFAULT,
             Importance.LOW,
             MONITOR_THREAD_TIMEOUT_DOC);
+    }
+
+    Map<String, String> returnPropertiesWithDefaultsValuesIfMissing() {
+        Map<String, ?> uncastProperties = this.values();
+        Map<String, String> config = new HashMap<>(uncastProperties.size());
+        uncastProperties.forEach((key, valueToBeCast) -> config.put(key, valueToBeCast.toString()));
+
+        return config;
     }
 
 }

@@ -64,6 +64,11 @@ public class Bulk2ClientBuilder {
         String endpoint = useSandbox ? TOKEN_REQUEST_ENDPOINT_SANDBOX : TOKEN_REQUEST_ENDPOINT;
         HttpUrl authorizeUrl = HttpUrl.parse(endpoint).newBuilder().build();
 
+
+        log.info("==>data from the config consumerKey- '" + consumerKey + "'");
+        log.info("==>data from the config consumerSecret- '" + consumerSecret + "'");
+        log.info("==>data from the config username- '" + username + "'");
+        log.info("==>data from the config password-'" + password + "'");
         RequestBody requestBody = new FormBody.Builder()
                 .add("grant_type", "password")
                 .add("client_id", consumerKey)
@@ -74,6 +79,7 @@ public class Bulk2ClientBuilder {
 
         Request request = new Request.Builder()
                 .url(authorizeUrl)
+                .addHeader("Content-Type", " application/x-www-form-urlencoded")
                 .post(requestBody)
                 .build();
 
@@ -88,6 +94,8 @@ public class Bulk2ClientBuilder {
 
             return Json.decode(responseBody.string(), AccessToken.class);
         } catch (IOException e) {
+            log.error("In builder class.");
+            log.info(e.getMessage());
             throw new BulkRequestException(e);
         }
     }

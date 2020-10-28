@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.kafka.common.config.Config;
 import org.apache.kafka.common.config.ConfigDef;
+import org.apache.kafka.common.config.ConfigException;
 import org.apache.kafka.common.config.ConfigValue;
 import org.apache.kafka.connect.connector.Task;
 import org.apache.kafka.connect.errors.ConnectException;
@@ -23,6 +24,8 @@ import static com.sfconnector.bulkapisource.connector.BulkApiSourceConnectorConf
 public class BulkApiSourceConnector extends SourceConnector {
 
     private final Logger log = LoggerFactory.getLogger(BulkApiSourceConnector.class);
+
+    private Map<String, String> configProperties;
 
     private Map<String, String> originalProps;
     private BulkApiSourceConnectorConfig config;
@@ -43,30 +46,30 @@ public class BulkApiSourceConnector extends SourceConnector {
         return BulkApiSourceTask.class;
     }
 
-    @Override
-    public Config validate(Map<String, String> connectorConfigs) {
-        Config config = super.validate(connectorConfigs);
-        // List<ConfigValue> configValues = config.configValues();
-        // boolean missingTopicDefinition = true;
-        // for (ConfigValue configValue : configValues) {
-        //     if (configValue.name().equals(FIRST_REQUIRED_PARAM_CONFIG)
-        //     || configValue.name().equals(SECOND_REQUIRED_PARAM_CONFIG)) {
-        //         if (configValue.value() != null) {
-        //             missingTopicDefinition = false;
-        //             break;
-        //         }
-        //     }
-        // }
-        // if (missingTopicDefinition) {
-        //     throw new ConnectException(String.format(
-        //         "There is no definition of [XYZ] in the "
-        //         + "configuration. Either the property "
-        //         + "'%s' or '%s' must be set in the configuration.",
-        //         FIRST_NONREQUIRED_PARAM_CONFIG,
-        //         SECOND_NONREQUIRED_PARAM_CONFIG));
-        // }
-        return config;
-    }
+    // @Override
+    // public Config validate(Map<String, String> connectorConfigs) {
+    //     Config config = super.validate(connectorConfigs);
+    //     // List<ConfigValue> configValues = config.configValues();
+    //     // boolean missingTopicDefinition = true;
+    //     // for (ConfigValue configValue : configValues) {
+    //     //     if (configValue.name().equals(FIRST_REQUIRED_PARAM_CONFIG)
+    //     //     || configValue.name().equals(SECOND_REQUIRED_PARAM_CONFIG)) {
+    //     //         if (configValue.value() != null) {
+    //     //             missingTopicDefinition = false;
+    //     //             break;
+    //     //         }
+    //     //     }
+    //     // }
+    //     // if (missingTopicDefinition) {
+    //     //     throw new ConnectException(String.format(
+    //     //         "There is no definition of [XYZ] in the "
+    //     //         + "configuration. Either the property "
+    //     //         + "'%s' or '%s' must be set in the configuration.",
+    //     //         FIRST_NONREQUIRED_PARAM_CONFIG,
+    //     //         SECOND_NONREQUIRED_PARAM_CONFIG));
+    //     // }
+    //     return config;
+    // }
 
     @Override
     public void start(Map<String, String> originalProps) {
@@ -74,10 +77,21 @@ public class BulkApiSourceConnector extends SourceConnector {
         config = new BulkApiSourceConnectorConfig(originalProps);
         String firstParam = config.getString(USERNAME_CONFIG);
         String secondParam = config.getString(PASSWORD_CONFIG);
+        try{
+            configProperties = setupSourcePropertiesWithDefaultsIfMissing(originalProps);
+        }catch(Exception e){
+
+        }
+        log.info("==>in connector start consumerKey- '" + originalProps.get(SFDC_KEY_CONFIG) + "'");
         int monitorThreadTimeout = config.getInt(MONITOR_THREAD_TIMEOUT_CONFIG);
         sourceMonitorThread = new SourceMonitorThread(
             context, firstParam, secondParam, monitorThreadTimeout);
         sourceMonitorThread.start();
+    }
+
+
+    private Map<String, String> setupSourcePropertiesWithDefaultsIfMissing(Map<String, String> props) throws ConfigException {
+        return new BulkApiSourceConnectorConfig(props).returnPropertiesWithDefaultsValuesIfMissing();
     }
 
     @Override
@@ -86,6 +100,8 @@ public class BulkApiSourceConnector extends SourceConnector {
         // The partitions below represent the source's part that
         // would likely to be broken down into tasks... such as
         // tables in a database.
+
+        log.info("==>in connector taskConfig consumerKey- '" + originalProps.get(SFDC_KEY_CONFIG) + "'");
         List<String> partitions = sourceMonitorThread.getCurrentSources();
         if (partitions.isEmpty()) {
             taskConfigs = Collections.emptyList();
@@ -96,6 +112,9 @@ public class BulkApiSourceConnector extends SourceConnector {
             for (List<String> source : partitionSources) {
                 Map<String, String> taskConfig = new HashMap<>(originalProps);
                 taskConfig.put("sources", String.join(",", source));
+                taskConfig.putAll(configProperties);
+                taskConfig.putAll(originalProps);
+                taskConfig.put(SFDC_KEY_CONFIG,originalProps.get(SFDC_KEY_CONFIG));
                 taskConfigs.add(taskConfig);
             }
         }
