@@ -1,10 +1,12 @@
 package com.sfconnector.bulkapisource.sfdc;
 
-
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import com.sfconnector.bulkapisource.request.CreateJobRequest;
 import com.sfconnector.bulkapisource.response.ErrorResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -29,6 +31,8 @@ public class RestRequester {
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
 
     private static final MediaType CSV_MEDIA_TYPE = MediaType.parse("text/csv");
+
+    private static final Logger log = LoggerFactory.getLogger(RestRequester.class);
 
     private static final TypeReference<List<ErrorResponse>> ERRORS_TYPE_REFERENCE = new TypeReference<List<ErrorResponse>>() {
 
@@ -98,6 +102,8 @@ public class RestRequester {
                 : (requestData instanceof RequestBody) ? (RequestBody) requestData
                 : RequestBody.create(JSON_MEDIA_TYPE, Json.encode(requestData));
 
+        log.info("--***** request JSON '" + Json.encode(requestData) + "'");
+
         return request(url, httpMethod, queryParams, requestBody, responseClass);
     }
 
@@ -123,6 +129,7 @@ public class RestRequester {
 
         Request request = new Request.Builder()
                 .url(urlBuilder.build())
+                .header("Accept", "text/csv")
                 .method(httpMethod, requestBody)
                 .build();
 

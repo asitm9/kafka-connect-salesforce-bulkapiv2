@@ -23,6 +23,8 @@ public class CreateJobRequest {
 
     private final OperationEnum operation;
 
+    private final String query;
+
     @JsonIgnore
     private final String content;
 
@@ -53,12 +55,16 @@ public class CreateJobRequest {
         return operation;
     }
 
-    public String getContent() {
-        return content;
+    public String getQuery() {
+        return query;
     }
 
     public File getContentFile() {
         return contentFile;
+    }
+
+    public String getContent() {
+        return content;
     }
 
     private CreateJobRequest(Builder builder) {
@@ -70,6 +76,7 @@ public class CreateJobRequest {
         this.operation = builder.operation;
         this.content = builder.content;
         this.contentFile = builder.contentFile;
+        this.query = builder.query;
     }
 
     public static class Builder {
@@ -90,10 +97,17 @@ public class CreateJobRequest {
 
         private File contentFile;
 
+        private String query;
+
         public Builder(String object, OperationEnum operation) {
             this.object = object;
             this.operation = operation;
             this.contentType = ContentTypeEnum.CSV;
+        }
+
+        public Builder withQuery(String  query) {
+            this.query = query;
+            return this;
         }
 
         public Builder withColumnDelimiter(ColumnDelimiterEnum columnDelimiter) {

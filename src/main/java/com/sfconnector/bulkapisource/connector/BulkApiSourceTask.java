@@ -1,6 +1,6 @@
 package com.sfconnector.bulkapisource.connector;
 
-
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,8 +16,10 @@ import org.apache.kafka.connect.source.SourceTask;
 
 import static com.sfconnector.bulkapisource.connector.BulkApiSourceConnectorConfig.*;
 
+import com.sfconnector.bulkapisource.response.CreateJobResponse;
 import com.sfconnector.bulkapisource.sfdc.Bulk2Client;
 import com.sfconnector.bulkapisource.sfdc.Bulk2ClientBuilder;
+import com.sfconnector.bulkapisource.type.OperationEnum;
 
 public class BulkApiSourceTask extends SourceTask {
 
@@ -35,6 +37,7 @@ public class BulkApiSourceTask extends SourceTask {
     private String sfdc_object;
     private String sfdc_query;
     private String topic;
+    private String jobId;
 
     private Bulk2Client client;
 
@@ -52,16 +55,27 @@ public class BulkApiSourceTask extends SourceTask {
         String sourcesStr = properties.get("sources");
         sources = Arrays.asList(sourcesStr.split(","));
 
-        try{
-        setupTaskConfig(properties);
-        }catch(Exception e){
-            log.error("Exception occured during connection.");
-            log.info(e.getMessage());
-            log.info(e.getStackTrace().toString());
-        }
+        sfdc_object = config.getString(SFDC_OBJECT_CONFIG);
 
-        log.info("Trying to get persistedMap.");
+        // try{
+        // setupTaskConfig(properties);
+        // createQueryJob();
+        // }catch(Exception e){
+        //     log.error("Exception occured during connection.");
+        //     log.info(e.getMessage());
+        //     log.info(e.getStackTrace().toString());
+        // }
+
+        
         Map<String, Object> persistedMap = null;
+
+        if(context !=null && context.offsetStorageReader() !=null ){
+            persistedMap = context.offsetStorageReader().offset(Collections.singletonMap(SFDC_OBJECT_CONFIG, sfdc_object));
+        }
+        log.info("Trying to get persistedMap.");
+        if(persistedMap !=null ){
+            log.info("$$$$$$$$$$$$$$$$$$$$$$$$persistedMap.");
+        }
 
     }
 
@@ -77,7 +91,9 @@ public class BulkApiSourceTask extends SourceTask {
                 source, null, null, null, Schema.BYTES_SCHEMA,
                 String.format("Data from %s", source).getBytes()));
         }
+        buildSourcePartition();
         return records;
+
     }
 
     @Override
@@ -85,7 +101,26 @@ public class BulkApiSourceTask extends SourceTask {
     }
 
 
+    private void createQueryJob() throws InterruptedException{
+        
+        CreateJobResponse createJobResponse = client.createQuery(null, sfdc_query);
+        String jId = createJobResponse.getId();
+        log.info("***********Job ID***- '" + jId + "'");
+        jobId = jId;
+        Thread.sleep(monitorThreadTimeout);
+        BufferedReader reader = new BufferedReader(client.getQueryResults(jobId, "9", ""));
+        
+        log.info("Polling data from SF");
+        reader.lines().forEach(s -> log.info(s));
 
+    }
+    // private List<SourceRecord> getsObjectAsSourceRecords() {
+
+    // }
+    private Map<String, Object> buildSourcePartition(){
+        
+        return Collections.singletonMap(SFDC_OBJECT_CONFIG, sfdc_object);
+    }
     private void setupTaskConfig(Map<String, String> props) throws IOException{
         config = new BulkApiSourceConnectorConfig(props);
         //baseUrl = config.getString("SFDC_URL_CONFIG");

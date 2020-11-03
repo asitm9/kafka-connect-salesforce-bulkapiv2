@@ -26,7 +26,7 @@ public class Bulk2Client {
 
     private static final Logger log = LoggerFactory.getLogger(Bulk2Client.class);
 
-    private static final String API_VERSION = "v41.0";
+    private static final String API_VERSION = "v49.0";
 
     private final RestRequester requester;
 
@@ -43,15 +43,16 @@ public class Bulk2Client {
     }
 
 
-    public CreateJobResponse createQuery(String object) {
-        return createQuery(object, (request) -> {
+    public CreateJobResponse createQuery(String object, String query) {
+        return createQuery(object, query, (request) -> {
         });
     }
 
-    public CreateJobResponse createQuery(String object, Consumer<CreateJobRequest.Builder> requestBuilder) {
+    public CreateJobResponse createQuery(String object, String query, Consumer<CreateJobRequest.Builder> requestBuilder) {
         String url = buildUrl("/services/data/vXX.X/jobs/query");
 
         CreateJobRequest.Builder builder = new CreateJobRequest.Builder(object, OperationEnum.QUERY);
+        builder = builder.withQuery(query);
         requestBuilder.accept(builder);
 
         return requester.post(url, builder.build(), CreateJobResponse.class);
@@ -108,6 +109,12 @@ public class Bulk2Client {
 
     public Reader getJobSuccessfulRecordResults(String jobId) {
         String url = buildUrl("/services/data/vXX.X/jobs/ingest/" + jobId + "/successfulResults/");
+
+        return requester.getCsv(url);
+    }
+
+    public Reader getQueryResults(String jobId, String maxRec, String locator) {
+        String url = buildUrl("/services/data/vXX.X/jobs/query/" + jobId + "/results/?maxRecords=" + maxRec);
 
         return requester.getCsv(url);
     }
